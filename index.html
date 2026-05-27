@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>₹1 Resume Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body class="bg-gray-100 flex p-6 gap-6">
+
+    <div class="w-1/2 bg-white p-6 rounded shadow">
+        <h2 class="text-xl font-bold mb-4">Enter Details</h2>
+        <label for="nameInput" class="block text-sm font-medium text-gray-700">Full Name</label>
+        <input id="nameInput" type="text" placeholder="Full Name" class="border p-2 w-full mb-1" oninput="updateResume()">
+        <p id="nameError" class="text-red-600 text-sm mb-3" aria-live="polite"></p>
+
+        <label for="roleInput" class="block text-sm font-medium text-gray-700">Target Job Role</label>
+        <input id="roleInput" type="text" placeholder="Target Job Role" class="border p-2 w-full mb-1" oninput="updateResume()">
+        <p id="roleError" class="text-red-600 text-sm mb-3" aria-live="polite"></p>
+
+        <div id="scriptError" class="text-red-700 text-sm mb-3" aria-live="polite"></div>
+
+        <button id="downloadBtn" onclick="downloadPDF()" class="bg-green-500 text-white p-2 rounded w-full">Download</button>
+    </div>
+
+    <div class="w-1/2 bg-white p-8 rounded shadow" id="resume-preview">
+        <h1 id="resName" class="text-3xl font-bold text-gray-800">Your Name</h1>
+        <p id="resRole" class="text-gray-600 font-medium">Your Target Role</p>
+    </div>
+
+    <script>
+        function validateForm() {
+            const name = document.getElementById('nameInput').value.trim();
+            const role = document.getElementById('roleInput').value.trim();
+            let valid = true;
+
+            const nameError = document.getElementById('nameError');
+            const roleError = document.getElementById('roleError');
+
+            nameError.innerText = '';
+            roleError.innerText = '';
+
+            if (!name) {
+                nameError.innerText = 'Please enter your full name.';
+                valid = false;
+            }
+            if (!role) {
+                roleError.innerText = 'Please enter the target role.';
+                valid = false;
+            }
+
+            const downloadBtn = document.getElementById('downloadBtn');
+            if (downloadBtn) downloadBtn.disabled = !valid || typeof html2pdf === 'undefined';
+
+            return valid;
+        }
+
+        function updateResume() {
+            document.getElementById('resName').innerText = document.getElementById('nameInput').value || 'Your Name';
+            document.getElementById('resRole').innerText = document.getElementById('roleInput').value || 'Your Target Role';
+            validateForm();
+        }
+
+        function downloadPDF() {
+            const scriptError = document.getElementById('scriptError');
+            scriptError.innerText = '';
+
+            if (typeof html2pdf === 'undefined') {
+                scriptError.innerText = 'PDF download is currently unavailable (html2pdf failed to load). Please check your connection or try again later.';
+                return;
+            }
+
+            if (!validateForm()) {
+                scriptError.innerText = 'Please fix form errors before downloading.';
+                return;
+            }
+
+            try {
+                const element = document.getElementById('resume-preview');
+                html2pdf().from(element).save();
+            } catch (err) {
+                console.error('PDF generation error:', err);
+                scriptError.innerText = 'An error occurred while generating the PDF. Please try again.';
+            }
+        }
+
+        // initial checks
+        (function init() {
+            // If html2pdf failed to load, notify the user and disable download
+            const scriptError = document.getElementById('scriptError');
+            const downloadBtn = document.getElementById('downloadBtn');
+            if (typeof html2pdf === 'undefined') {
+                if (scriptError) scriptError.innerText = 'PDF export library not available. Download disabled.';
+                if (downloadBtn) downloadBtn.disabled = true;
+            }
+
+            // run initial validation to set button state
+            validateForm();
+        })();
+    </script>
+</body>
+</html>
